@@ -143,6 +143,9 @@ for(h in 1990:2014){
   access_df <- cbind.data.frame(access_df$country, as.numeric(access_df$Nat.Elec.Rate), stringsAsFactors=FALSE)
   names(access_df) <- c("Country","Nat.Elec.Rate")
   
+  # Replace electrification rates over 80% with NA
+  # access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate > 80] <- NA
+  
   # Merge access data with map.world by country
   df <- merge(map.world, access_df, by.x = "region", by.y = "Country", sort = F, all.x=T)
   df2 <- df[order(df$order),]
@@ -170,11 +173,14 @@ for(h in 1990:2014){
     geom_map(data=map.world2, map=map.world2, aes(x=long, y=lat, map_id=region, fill=access)) + 
     scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") + 
     coord_equal() +
-    ditch_the_axes
+    ditch_the_axes +
+    annotate("text", x = 146.04561, y = 65, 
+             label = "\U00A9 K. Ramirez-Meyers", col="white", cex=2,
+             alpha = 0.8)
   gg
   
   # Save plot
-  ggsave(paste0(column,".pdf"), height = 6, width = 9, units = "in")
+  ggsave(paste0(column,"-max100.pdf"), height = 6, width = 9, units = "in")
   
   names(map.world2)[ncol(map.world2)] <- column
 }
