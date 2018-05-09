@@ -122,6 +122,7 @@ access_data$country[access_data$country == "Timor Leste"] <- "Timor-Leste"
 access_data$country[access_data$country == "Turks And Caicos Islands"] <- "Turks and Caicos Islands"
 access_data$country[access_data$country == "Wallis And Futuna Islands"] <- "Wallis and Futuna"
 
+map.world <- map_data(map="world")
 map.world$region[map.world$region == 'Virgin Islands'][1:23] <- "British Virgin Islands"
 map.world$region[map.world$region == 'Virgin Islands'] <- "United States Virgin Islands"
 
@@ -144,7 +145,7 @@ for(h in 1990:2014){
   names(access_df) <- c("Country","Nat.Elec.Rate")
   
   # Replace electrification rates over 80% with NA
-  # access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate > 80] <- NA
+  access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate >= 80] <- NA
   
   # Merge access data with map.world by country
   df <- merge(map.world, access_df, by.x = "region", by.y = "Country", sort = F, all.x=T)
@@ -174,13 +175,13 @@ for(h in 1990:2014){
     scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") + 
     coord_equal() +
     ditch_the_axes +
-    annotate("text", x = 146.04561, y = 65, 
-             label = "\U00A9 K. Ramirez-Meyers", col="white", cex=2,
+    annotate("text", x = 160, y = 66.5, 
+             label = "\U00A9 K. Ramirez-Meyers", col="white", cex=1,
              alpha = 0.8)
   gg
   
   # Save plot
-  ggsave(paste0(column,"-max100.pdf"), height = 6, width = 9, units = "in")
+  ggsave(paste0(column,"-max80.pdf"), height = 6, width = 9, units = "in")
   
   names(map.world2)[ncol(map.world2)] <- column
 }
