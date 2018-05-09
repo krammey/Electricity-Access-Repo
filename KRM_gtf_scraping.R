@@ -171,6 +171,8 @@ for(h in 1990:2014){
   )
 
   gg <- ggplot() + 
+    ggtitle(as.character(h)) +
+    theme(plot.title = element_text(hjust = 0.5)) +
     geom_map(data=map.world2, map=map.world2, aes(x=long, y=lat, map_id=region, fill=access)) + 
     scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") + 
     coord_equal() +
@@ -181,7 +183,7 @@ for(h in 1990:2014){
   gg
   
   # Save plot
-  ggsave(paste0(column,"-max80.pdf"), height = 6, width = 9, units = "in")
+  ggsave(paste0(column,"-max80.jpg"), dpi = 300)
   
   names(map.world2)[ncol(map.world2)] <- column
 }
