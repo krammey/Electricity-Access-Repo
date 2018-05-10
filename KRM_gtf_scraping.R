@@ -138,6 +138,16 @@ access_data <- as.data.frame(access_data,stringsAsFactors=FALSE)
 
 write.csv(access_data, file = 'access_data.csv', row.names = F)
 
+ditch_the_axes <- theme(
+  axis.text = element_blank(),
+  axis.line = element_blank(),
+  axis.ticks = element_blank(),
+  panel.border = element_blank(),
+  panel.grid = element_blank(),
+  panel.background = element_blank(),
+  axis.title = element_blank()
+)
+
 # Make map for each year
 for(h in 1990:2014){
   
@@ -145,33 +155,17 @@ for(h in 1990:2014){
   access_df <- access_data[access_data$Year == as.numeric(h),]
   access_df <- cbind.data.frame(access_df$country, as.numeric(access_df$Nat.Elec.Rate), stringsAsFactors=FALSE)
   names(access_df) <- c("Country","Nat.Elec.Rate")
-  
   # Replace electrification rates over 80% with NA
-  access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate >= 60] <- NA
-  
+  # access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate >= 60] <- NA
   # Merge access data with map.world by country
   df <- merge(map.world, access_df, by.x = "region", by.y = "Country", sort = F, all.x=T)
   df2 <- df[order(df$order),]
-  
-  
   # Append column to map data and rename
   map.world2 <- cbind.data.frame(map.world, as.numeric(df2$Nat.Elec.Rate), stringsAsFactors=FALSE)
-  
   # Rename column
   column <- paste0(h,"_Access")
   names(map.world2)[names(map.world2) == "as.numeric(df2$Nat.Elec.Rate)"] <- "access"
-  
   # Plot
-  ditch_the_axes <- theme(
-    axis.text = element_blank(),
-    axis.line = element_blank(),
-    axis.ticks = element_blank(),
-    panel.border = element_blank(),
-    panel.grid = element_blank(),
-#    panel.background = element_rect(fill = "white", colour = "white"),
-    axis.title = element_blank()
-  )
-
   gg <- ggplot() + 
     ggtitle(as.character(h)) +
     theme(plot.title = element_text(hjust = 0.5)) +
@@ -185,12 +179,10 @@ for(h in 1990:2014){
   gg
   
   # Save plot
-  ggsave(paste0(column,"-max60.jpg"), dpi = 300)
+  ggsave(paste0(column,"-max100.jpg"), dpi = 72)
   
   names(map.world2)[ncol(map.world2)] <- column
 }
-
-
 
 
 
