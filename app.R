@@ -43,25 +43,25 @@ YearMapDataFxn = function(h,MaxPerc=100){
 
 ### COMMENT OUT
 # Generate images to make GIFs
-for(h in 1990:2014){
-    worldmap2 <- YearMapDataFxn(h,50)
-    # Plot
-    gg <- ggplot() +
-        ggtitle(as.character(h)) +
-        theme(plot.title = element_text(hjust = 0.5, size = 30)) +
-        geom_map(
-            data=worldmap2,
-            map=worldmap2,
-            aes(x=long, y=lat, map_id=region, fill=access)
-        ) +
-        scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") +
-        coord_equal() +
-        ditch_the_axes +
-        annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
-    gg
-    column <- paste0(h,"_Access")
-    ggsave(paste0(column,"-max50.jpg"), dpi = 72)
-}
+# for(h in 1990:2014){
+#     worldmap2 <- YearMapDataFxn(h,50)
+#     # Plot
+#     gg <- ggplot() +
+#         ggtitle(as.character(h)) +
+#         theme(plot.title = element_text(hjust = 0.5, size = 30)) +
+#         geom_map(
+#             data=worldmap2,
+#             map=worldmap2,
+#             aes(x=long, y=lat, map_id=region, fill=access)
+#         ) +
+#         scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") +
+#         coord_equal() +
+#         ditch_the_axes +
+#         annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
+#     gg
+#     column <- paste0(h,"_Access")
+#     ggsave(paste0(column,"-max50.jpg"), dpi = 72)
+# }
   
   
 # Get rid of axes for plot
@@ -92,8 +92,8 @@ ui <- dashboardPage(
                            # menuSubItem("By Country", tabName = "by_country", icon = icon("angle-right"))
                   ),
                   menuItem("Gifs",  tabName = "gifs", icon = icon("play"),
-                      menuSubItem("All Countries", tabName = "gif100", icon = icon("angle-right"))
-                  #     menuSubItem("High Impact Countries", tabName = "gif80", icon = icon("angle-right"))
+                      menuSubItem("All Countries", tabName = "gif100", icon = icon("angle-right")),
+                      menuSubItem("High Impact Countries", tabName = "gif50", icon = icon("angle-right"))
                   )
       ),
       hr()
@@ -140,19 +140,17 @@ ui <- dashboardPage(
             tabItem(tabName = "gif100",
                     box( width = NULL, status = "primary", solidHeader = TRUE,
                          title="History of Global Electricity Access",
-                         imageOutput("gif100")
-                         # downloadButton('downloadTable', 'Download'),
-                         # br(),br()
+                         imageOutput("gif100"),
+                         downloadButton('downloadGif100', 'Download')
+                    )
+            ),
+            tabItem(tabName = "gif50",
+                    box( width = NULL, status = "primary", solidHeader = TRUE, 
+                         title="History of Electricity Access in High Impact Countries",
+                         imageOutput("gif50"),
+                         downloadButton('downloadGif50', 'Download')
                     )
             )
-#             tabItem(tabName = "gif80",
-#                     box( width = NULL, status = "primary", solidHeader = TRUE, title="History of Electricity Access in High Impact Countries",                
-#                          downloadButton('downloadHtml', 'Download'),
-#                          br(),br()
-#                          #                 htmlOutput("picture")
-#                          #                 gif(src = "https://drive.google.com/open?id=1jy04HJ-Vrk-S-NXokb5xFc7YG1Lb9S2E")
-#                     )
-#             )
         )
     )
 )
@@ -201,30 +199,34 @@ server <- function(input, output) ({
             image_write(tempfile(fileext='gif'), format = 'gif')
         
         list(src = tmpfile, contentType = "image/gif")
-      
-        # worldmapALL <- YearMapDataFxn(1990)
-        # worldmapALL$year <- 1990
-        # for(y in 1991:2014){
-        #    tempmap <- YearMapDataFxn(y)
-        #    tempmap$year <- y
-        #    worldmapALL <- rbind.data.frame(worldmapALL,tempmap,stringsAsFactors=FALSE)
-        # }
-        # 
-        # 
-        # p <- ggplot() + 
-        #   # ggtitle(as.character(h)) +
-        #   # theme(plot.title = element_text(hjust = 0.5)) +
-        #   geom_map(
-        #     data=worldmapALL, 
-        #     map=worldmapALL,
-        #     aes(x=long, y=lat, map_id=region, fill=access,frame = year)
-        #   ) + 
-        #   scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") + 
-        #   coord_equal() +
-        #   ditch_the_axes +
-        #   annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
-        # gganimate(p)
+
     })
+    
+    output$gif50 <- renderImage({
+      
+      tmpfile <- image_read("gif50.gif") %>% 
+        image_animate(fps=4) %>%
+        image_write(tempfile(fileext='gif'), format = 'gif')
+      
+      list(src = tmpfile, contentType = "image/gif")
+      
+    })
+    
+    
+    output$downloadGif100 <- downloadHandler(
+      filename = "gif100.gif",
+      content = function(file){
+        image_write(im = image_read("gif100.gif"), path = file)
+      }
+    )
+    
+    
+    output$downloadGif50 <- downloadHandler(
+      filename = "gif50.gif",
+      content = function(file){
+          image_write(im = image_read("gif50.gif"), path = file)
+      }
+    )
   
 })
 
