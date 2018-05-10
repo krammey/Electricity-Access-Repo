@@ -55,7 +55,7 @@ YearMapDataFxn = function(h,MaxPerc=100){
 ### COMMENT OUT
 ##  Generate images to make GIFs
 for(h in 1990:2014){
-    worldmap2 <- YearMapDataFxn(h)
+    worldmap2 <- YearMapDataFxn(h,50)
     # Plot
     gg <- ggplot() +
         ggtitle(as.character(h)) +
@@ -72,7 +72,7 @@ for(h in 1990:2014){
         annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
     gg
     column <- paste0(h,"_Access")
-    ggsave(paste0(column,"-max100.jpg"), dpi = 144)
+    ggsave(paste0(column,"-max50.jpg"), dpi = 72)
 }
 
 
@@ -104,12 +104,12 @@ ui <- dashboardPage(
         tabItems(
             tabItem(tabName = "by_year",
                 fluidRow( # split panel into 2 columns: 1 for year slider input, 1 for map output
-                    column(width = 4,
+                    column(width = 2,
                         box( width = NULL, title = "Select a year:",solidHeader = TRUE,status = "primary", 
                             sliderInput(inputId="inputyear",label="", value=1990, min=1990, max = 2014, step=1, sep ="")
                         )
                     ),
-                    column(width = 8,
+                    column(width = 10,
                          box(
                            height = NULL, width = NULL, solidHeader = TRUE,title = textOutput("MapTitle"), status = "primary", 
                            plotOutput("YearMap")
@@ -195,6 +195,7 @@ server <- function(input, output) ({
     output$gif100 <- renderImage({
       
         tmpfile <- image_read("gif100.gif") %>% 
+            # image_resize("70%") %>% 
             image_animate(fps=4) %>%
             image_write(tempfile(fileext='gif'), format = 'gif')
         
