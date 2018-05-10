@@ -74,10 +74,10 @@ access_data$country[access_data$country == "United Kingdom"] <- "UK"
 map.world <- map_data(map="world")
 
 # compare the 2 lists
-countrylist2 <- unique(access_data$country) # GTF country list
-countrylist <- unique(map.world$region) # 'Maps' country list
-countrylist2[!(countrylist2 %in% countrylist)]
-countrylist[!(countrylist %in% countrylist2)]
+# countrylist2 <- unique(access_data$country) # GTF country list
+# countrylist <- unique(map.world$region) # 'Maps' country list
+# countrylist2[!(countrylist2 %in% countrylist)]
+# countrylist[!(countrylist %in% countrylist2)]
 
 # Fix the GTF country list
 access_data <- rbind.data.frame(access_data,access_data[access_data$country == "Antigua And Barbuda",])
@@ -126,15 +126,17 @@ map.world <- map_data(map="world")
 map.world$region[map.world$region == 'Virgin Islands'][1:23] <- "British Virgin Islands"
 map.world$region[map.world$region == 'Virgin Islands'] <- "United States Virgin Islands"
 
-# compare the 2 lists
-countrylist2 <- unique(access_data$country) # GTF country list
-countrylist <- unique(map.world$region) # 'Maps' country list
-countrylist2[!(countrylist2 %in% countrylist)]
-countrylist[!(countrylist %in% countrylist2)]
+# # compare the 2 lists
+# countrylist2 <- unique(access_data$country) # GTF country list
+# countrylist <- unique(map.world$region) # 'Maps' country list
+# countrylist2[!(countrylist2 %in% countrylist)]
+# countrylist[!(countrylist %in% countrylist2)]
 
 # make Year column numeric
 access_data$Year <- as.numeric(access_data$Year)
 access_data <- as.data.frame(access_data,stringsAsFactors=FALSE)
+
+write.csv(access_data, file = 'access_data.csv', row.names = F)
 
 # Make map for each year
 for(h in 1990:2014){
@@ -145,7 +147,7 @@ for(h in 1990:2014){
   names(access_df) <- c("Country","Nat.Elec.Rate")
   
   # Replace electrification rates over 80% with NA
-  access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate >= 80] <- NA
+  access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate >= 60] <- NA
   
   # Merge access data with map.world by country
   df <- merge(map.world, access_df, by.x = "region", by.y = "Country", sort = F, all.x=T)
@@ -183,7 +185,7 @@ for(h in 1990:2014){
   gg
   
   # Save plot
-  ggsave(paste0(column,"-max80.jpg"), dpi = 300)
+  ggsave(paste0(column,"-max60.jpg"), dpi = 300)
   
   names(map.world2)[ncol(map.world2)] <- column
 }
