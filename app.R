@@ -60,7 +60,7 @@ for(h in 1990:2014){
     gg <- ggplot() +
         ggtitle(as.character(h)) +
         theme(plot.title = element_text(hjust = 0.5, size = 30)) +
-        theme(plot.margin=unit(c(0,0,0,0),"mm")) +
+        # theme(plot.margin=unit(c(0,0,0,0),"mm")) +
         geom_map(
             data=worldmap2,
             map=worldmap2,
@@ -72,7 +72,7 @@ for(h in 1990:2014){
         annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
     gg
     column <- paste0(h,"_Access")
-    ggsave(paste0(column,"-max100.jpg"), dpi = 72)
+    ggsave(paste0(column,"-max100.jpg"), dpi = 144)
 }
 
 
@@ -187,7 +187,7 @@ server <- function(input, output) ({
             coord_equal() +
             ditch_the_axes +
             annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
-        print(gg)
+        gg
         
     })
     
