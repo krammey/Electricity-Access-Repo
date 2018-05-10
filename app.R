@@ -9,6 +9,7 @@ library(shinydashboard)
 library(ggplot2)
 library(ggmap)
 library(maps)
+library(magick)
 
 # Load world map and fix virgin islands labels
 worldmap <- map_data(map="world")
@@ -22,48 +23,6 @@ countrylist <- unique(worldmap$region)
 # Load access data
 access_data <- read.csv('access_data.csv', header=TRUE, stringsAsFactors = F, na.strings="NA")
 
-
-# Define data processing function with year, h, as input
-YearMapDataFxn = function(h,MaxPerc=100){
-  
-     # Get access data for year h
-     access_df <- access_data[access_data$Year == as.numeric(h),]
-     access_df <- cbind.data.frame(access_df$country, as.numeric(access_df$Nat.Elec.Rate), stringsAsFactors=FALSE)
-     names(access_df) <- c("Country","Nat.Elec.Rate")
-     # Replace electrification rates over 80% with NA
-     access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate >= MaxPerc] <- NA
-     # Merge access data with map.world by country
-     df <- merge(worldmap, access_df, by.x = "region", by.y = "Country", sort = F, all.x=T)
-     df2 <- df[order(df$order),]
-     # Append column to map data and rename
-     worldmap2 <- cbind.data.frame(worldmap, as.numeric(df2$Nat.Elec.Rate), stringsAsFactors=FALSE)
-     names(worldmap2)[names(worldmap2) == "as.numeric(df2$Nat.Elec.Rate)"] <- "access"
-     return(worldmap2)
-}
-
-### COMMENT OUT
-# Generate images to make GIFs
-# for(h in 1990:2014){
-#     worldmap2 <- YearMapDataFxn(h,50)
-#     # Plot
-#     gg <- ggplot() +
-#         ggtitle(as.character(h)) +
-#         theme(plot.title = element_text(hjust = 0.5, size = 30)) +
-#         geom_map(
-#             data=worldmap2,
-#             map=worldmap2,
-#             aes(x=long, y=lat, map_id=region, fill=access)
-#         ) +
-#         scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") +
-#         coord_equal() +
-#         ditch_the_axes +
-#         annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
-#     gg
-#     column <- paste0(h,"_Access")
-#     ggsave(paste0(column,"-max50.jpg"), dpi = 72)
-# }
-  
-  
 # Get rid of axes for plot
 ditch_the_axes <- theme(
   axis.text = element_blank(),
@@ -74,6 +33,47 @@ ditch_the_axes <- theme(
   axis.title = element_blank(),
   panel.background = element_blank()
 )
+
+# Define data processing function with year, h, as input
+YearMapDataFxn = function(h,MaxPerc=100){
+  
+     # Get access data for year h
+     access_df <- access_data[access_data$Year == as.numeric(h),]
+     access_df <- cbind.data.frame(access_df$country, as.numeric(access_df$Nat.Elec.Rate), stringsAsFactors=FALSE)
+     names(access_df) <- c("Country","Nat.Elec.Rate")
+     # Replace electrification rates over 80% with NA
+     access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate > MaxPerc] <- NA
+     # Merge access data with map.world by country
+     df <- merge(worldmap, access_df, by.x = "region", by.y = "Country", sort = F, all.x=T)
+     df2 <- df[order(df$order),]
+     # Append column to map data and rename
+     worldmap2 <- cbind.data.frame(worldmap, as.numeric(df2$Nat.Elec.Rate), stringsAsFactors=FALSE)
+     names(worldmap2)[names(worldmap2) == "as.numeric(df2$Nat.Elec.Rate)"] <- "access"
+     return(worldmap2)
+}
+
+### COMMENT OUT
+##  Generate images to make GIFs
+for(h in 1990:2014){
+    worldmap2 <- YearMapDataFxn(h)
+    # Plot
+    gg <- ggplot() +
+        ggtitle(as.character(h)) +
+        theme(plot.title = element_text(hjust = 0.5, size = 30)) +
+        theme(plot.margin=unit(c(0,0,0,0),"mm")) +
+        geom_map(
+            data=worldmap2,
+            map=worldmap2,
+            aes(x=long, y=lat, map_id=region, fill=access)
+        ) +
+        scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") +
+        coord_equal() +
+        ditch_the_axes +
+        annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
+    gg
+    column <- paste0(h,"_Access")
+    ggsave(paste0(column,"-max100.jpg"), dpi = 72)
+}
 
 
 
