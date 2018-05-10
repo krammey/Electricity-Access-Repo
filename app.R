@@ -1,6 +1,4 @@
-# note use shinyapps.io to share app online
-# devtools::install_github("rstudio/shinyapps")
-# shiny-server
+
 
 
 # Load necessary packages
@@ -52,28 +50,48 @@ YearMapDataFxn = function(h,MaxPerc=100){
      return(worldmap2)
 }
 
+# Define data processing function with year, h, as input
+CountryMapDataFxn = function(c,h){
+  
+  # Get access data for year h, country c
+  access_df <- access_data[access_data$country == c,]
+  access_df <- access_df[access_df$Year == h,]
+  # access_df <- cbind.data.frame(access_df$country, as.numeric(access_df$Nat.Elec.Rate), stringsAsFactors=FALSE)
+  # names(access_df) <- c("Country","Nat.Elec.Rate")
+  # Replace electrification rates over 80% with NA
+  # access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate > MaxPerc] <- NA
+  # Merge access data with map.world by country
+  countrymap <- worldmap[worldmap$region == c,]
+  df <- merge(countrymap, access_df, by.x = "region", by.y = "country")
+  df2 <- df[order(df$Year),]
+  # Append column to map data and rename
+  # worldmap2 <- cbind.data.frame(worldmap, as.numeric(df2$Nat.Elec.Rate), stringsAsFactors=FALSE)
+  names(df2)[8:10] <- c("National","Rural","Urban")
+  return(df2)
+}
+
 ### COMMENT OUT
 ##  Generate images to make GIFs
-for(h in 1990:2014){
-    worldmap2 <- YearMapDataFxn(h,50)
-    # Plot
-    gg <- ggplot() +
-        ggtitle(as.character(h)) +
-        theme(plot.title = element_text(hjust = 0.5, size = 30)) +
-        # theme(plot.margin=unit(c(0,0,0,0),"mm")) +
-        geom_map(
-            data=worldmap2,
-            map=worldmap2,
-            aes(x=long, y=lat, map_id=region, fill=access)
-        ) +
-        scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") +
-        coord_equal() +
-        ditch_the_axes +
-        annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
-    gg
-    column <- paste0(h,"_Access")
-    ggsave(paste0(column,"-max50.jpg"), dpi = 72)
-}
+# for(h in 1990:2014){
+#     worldmap2 <- YearMapDataFxn(h,50)
+#     # Plot
+#     gg <- ggplot() +
+#         ggtitle(as.character(h)) +
+#         theme(plot.title = element_text(hjust = 0.5, size = 30)) +
+#         # theme(plot.margin=unit(c(0,0,0,0),"mm")) +
+#         geom_map(
+#             data=worldmap2,
+#             map=worldmap2,
+#             aes(x=long, y=lat, map_id=region, fill=access)
+#         ) +
+#         scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) +
+#         coord_equal() +
+#         ditch_the_axes +
+#         annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
+#     gg
+#     column <- paste0(h,"_Access")
+#     ggsave(paste0(column,"-max50.jpg"), dpi = 72)
+# }
 
 
 
@@ -86,11 +104,9 @@ ui <- dashboardPage(
       width = 250,
       hr(),
       sidebarMenu(id="tabs",
-                  #        menuItem("ReadMe", tabName = "readme", icon=icon("mortar-board")),
-                  menuItem("Maps", tabName="maps", icon=icon("globe"), selected=TRUE,
-                           menuSubItem("By Year", tabName = "by_year", icon = icon("angle-right"))
-                           # menuSubItem("By Country", tabName = "by_country", icon = icon("angle-right"))
-                  ),
+                  menuItem("ReadMe", tabName = "readme", icon=icon("info")),
+                  menuItem("Global Access By Year", tabName="by_year", icon=icon("globe"), selected=TRUE),
+                  menuItem("Rural Versus Urban Access By Country", tabName="by_country", icon=icon("adjust"), selected=TRUE),
                   menuItem("Gifs",  tabName = "gifs", icon = icon("play"),
                       menuSubItem("All Countries", tabName = "gif100", icon = icon("angle-right")),
                       menuSubItem("High Impact Countries", tabName = "gif50", icon = icon("angle-right"))
@@ -111,32 +127,37 @@ ui <- dashboardPage(
                     ),
                     column(width = 10,
                          box(
-                           height = NULL, width = NULL, solidHeader = TRUE,title = textOutput("MapTitle"), status = "primary", 
+                           height = NULL, width = NULL, solidHeader = TRUE,
+                           title = textOutput("MapTitle"), status = "primary", 
                            plotOutput("YearMap")
                          )
-                         # box(
-                         #   width = NULL, collapsible = TRUE, title = "Map", status = "primary", solidHeader = TRUE,
-                         #   plotOutput("plot",height="500px")
-                         # ),
-                         # downloadButton('downloadTable', 'Download'),
-                         # br(),br()
                     )
                 )
             ),
-#             tabItem(tabName = "by_country",
-#                     fluidRow( 
-#                       # column(width = 4,
-#                       #     box( width = NULL, title = "Select a country",
-#                       #         dropdownMenu(type = "Country", .list = countrylist2)
-#                       #     )
-#                       # ),
-#                       column(width = 8,
-# #                    box( width = NULL, plotOutput("plot",height="500px"), collapsible = TRUE, title = "Map", status = "primary", solidHeader = TRUE),
-#                              downloadButton('downloadTable', 'Download'),
-#                              br(),br()
-#                       )
-#                     )
-#             ),
+            tabItem(tabName = "by_country",
+                fluidRow(
+                    column(width = 4,
+                        box( width = NULL, title = "Select a country:",solidHeader = TRUE,status = "primary",
+                            selectizeInput(inputId="inputcountry", h4(""),
+                                options = list(dropdownParent = 'body'),
+                                choices = countrylist
+                            ),
+                            tags$head(tags$style(".selectize-control.single { width: 150px; z-index: 1; }"))
+                        ),
+                        box( width = NULL, title = "Choose a region:",solidHeader = TRUE,status = "primary",
+                             radioButtons(inputId="regioninput", "", 
+                                          c("National"="National","Urban"="Urban","Rural"="Rural"))
+                        )
+                    ),
+                    column(width = 8,
+                        box(
+                            height = NULL, width = NULL, solidHeader = TRUE,
+                            title = textOutput("CountryMapTitle"), status = "primary",
+                            plotOutput("CountryMap")
+                        )
+                    )
+                )
+            ),
             tabItem(tabName = "gif100",
                     box( width = NULL, status = "primary", solidHeader = TRUE,
                          title="History of Global Electricity Access",
@@ -176,14 +197,12 @@ server <- function(input, output) ({
         
         # Plot
         gg = ggplot() + 
-            # ggtitle(as.character(h)) +
-            # theme(plot.title = element_text(hjust = 0.5)) +
             geom_map(
                 data=worldmap2, 
                 map=worldmap2,
                 aes(x=long, y=lat, map_id=region, fill=access)
             ) + 
-            scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar") + 
+            scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
             coord_equal() +
             ditch_the_axes +
             annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
@@ -191,11 +210,36 @@ server <- function(input, output) ({
         
     })
     
+    output$CountryMapTitle <- renderText(paste0("Map of Electricity Access in ",input$inputcountry))
+    output$CountryMap <- renderPlot({
+      
+      # Get input year and country
+      h <- input$inputyear
+      c <- input$inputcountry
+      
+      # Get mapping data
+      map <- CountryMapDataFxn(c,h)
+      map$access <- map[names(map) == input$inputregion]
+      names(map)[ncol(map)] <- "access"
+      
+      # Plot
+      gg = ggplot() +
+        geom_map(
+          data=map, 
+          map=map,
+          aes(x=long, y=lat, map_id=region, fill=access)
+        ) + 
+        scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
+        coord_equal() +
+        ditch_the_axes
+#        annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
+      gg
+      
+    })
     
     output$gif100 <- renderImage({
       
         tmpfile <- image_read("gif100.gif") %>% 
-            # image_resize("70%") %>% 
             image_animate(fps=4) %>%
             image_write(tempfile(fileext='gif'), format = 'gif')
         
@@ -230,6 +274,8 @@ server <- function(input, output) ({
     )
   
 })
+
+
 
 shinyApp(ui = ui, server = server)
 
