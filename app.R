@@ -80,20 +80,21 @@ body <- dashboardBody(
             fluidRow( # split panel into 2 columns: 1 for year slider input, 1 for map output
                 column(width = 4,
                     box( width = NULL, title = "Select a year:",
-                        sliderInput("year"," ", value=1, min=1990, max = 2014, step=1)
+                        sliderInput(inputId="year",label="Year:", value=1, min=1990, max = 2014, step=1)
                     )
                 ),
                 column(width = 8,
-                    box(
-                      width = NULL, 
-                      plotOutput("plot",height="500px"),
-                      collapsible = TRUE, 
-                      title = "Map", 
-                      status = "primary",
-                      solidHeader = TRUE
-                    ),
-                    downloadButton('downloadTable', 'Download'),
-                    br(),br()
+                     box(plotOutput("plot",height="500px"))                  
+                    # box(
+                    #   width = NULL, 
+                    #   plotOutput("plot",height="500px"),
+                    #   collapsible = TRUE, 
+                    #   title = "Map", 
+                    #   status = "primary",
+                    #   solidHeader = TRUE
+                    # ),
+                    # downloadButton('downloadTable', 'Download'),
+                    # br(),br()
                 )
             )
         ),
@@ -143,9 +144,8 @@ ui <- dashboardPage(
 
 
 server <- function(input, output) ({
-
+    worldmap2 <- mapDataFxn(input$year)
     output$plot <- renderPlot({
-        worldmap2 <- mapDataFxn(input$year)
         gg = ggplot() + 
             ggtitle(as.character(h)) +
             theme(plot.title = element_text(hjust = 0.5)) +
