@@ -327,7 +327,7 @@ server <- function(input, output) ({
         }
       
         tmpfile <- image_read("gif100.gif") %>% 
-            image_resize("90%") %>%
+            # image_resize("90%") %>%
             image_animate(fps=4) %>%
             image_write(tempfile(fileext='gif'), format = 'gif')
         
@@ -352,7 +352,7 @@ server <- function(input, output) ({
       }
       
       tmpfile <- image_read("gif50.gif") %>% 
-        image_resize("90%") %>%
+        # image_resize("90%") %>%
         image_animate(fps=4) %>%
         image_write(tempfile(fileext='gif'), format = 'gif')
       
