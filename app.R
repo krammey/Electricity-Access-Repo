@@ -124,7 +124,7 @@ ui <- dashboardPage(
       width = 300,
       hr(),
       sidebarMenu(id="tabs",
-                  # menuItem("ReadMe", tabName = "readme", icon=icon("info")),
+                  menuItem("ReadMe", tabName = "readme", icon=icon("info")),
                   menuItem("Global Access By Year", tabName="by_year", icon=icon("globe"), selected=TRUE),
                   menuItem("Rural Versus Urban Access By Country", tabName="by_country", icon=icon("adjust"), selected=TRUE),
                   menuItem("Gifs",  tabName = "gifs", icon = icon("play"),
@@ -137,12 +137,12 @@ ui <- dashboardPage(
     
     dashboardBody(
         tabItems(
-            # tabItem(tabName = "ReadMe",
-            #     fluidRow(
-            #         # withMathJax(),
-            #         includeMarkdown("readme.md")
-            #     )
-            # ),
+            tabItem(tabName = "readme",
+                box( width = NULL, title = "Welcome!",solidHeader = TRUE,status = "primary", 
+                withMathJax(),
+                includeMarkdown("Readme.md")
+                )
+            ),
             tabItem(tabName = "by_year",
                 fluidRow( # split panel into 2 columns: 1 for year slider input, 1 for map output
                     column(width = 2,
@@ -167,8 +167,8 @@ ui <- dashboardPage(
                             selectizeInput(inputId="inputcountry", h4(""),
                                 options = list(dropdownParent = 'body'),
                                 choices = countrylist
-                            )
-                            # tags$head(tags$style(".selectize-control.single { width: 150px; z-index: 1; }"))
+                            ),
+                            tags$head(tags$style(".selectize-control.single { width: 150px; z-index: 1; }"))
                         ),
                         box( width = NULL, title = "Choose a region:",solidHeader = TRUE,status = "primary",
                              radioButtons(inputId="inputregion", "", 
