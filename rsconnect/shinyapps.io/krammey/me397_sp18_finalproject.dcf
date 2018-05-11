@@ -5,6 +5,6 @@ account: krammey
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 341060
-bundleId: 1369406
+bundleId: 1369467
 url: https://krammey.shinyapps.io/me397_sp18_finalproject/
-when: 1526067321.21925
+when: 1526068673.56298

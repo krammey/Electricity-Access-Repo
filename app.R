@@ -221,6 +221,7 @@ server <- function(input, output) ({
     
     output$CountryMapTitle <- renderText({
       
+        h <- input$inputyear_c
         c <- input$inputcountry
         r <- input$inputregion
         if(input$inputcountry == "USA - Continental"){
@@ -233,7 +234,7 @@ server <- function(input, output) ({
           c="Alaska"
         }
         if(r == "National"){r <- ""}
-        paste0("Electricity Access in ",r," ",c," in ",input$inputyear_c)
+        paste0("Electricity Access in ",r," ",c," in ",h)
     })
     
     output$CountryMap <- renderPlot({
@@ -265,22 +266,10 @@ server <- function(input, output) ({
               map <- map[map$subregion == "Alaska",]
               c="Alaska"
             }
-            map$access <- max(map2[names(map2) == r])
-            names(map)[ncol(map)] <- "access"
-            
+  
             # Plot
-            gg = ggplot() +
-                ggtitle(paste0(max(map$access),"%")) +
-                theme(plot.title = element_text(hjust = 0.5, size = 30)) +
-                geom_map(
-                    data=map, 
-                    map=map,
-                    aes(x=long, y=lat, map_id=region, fill=access)
-                ) + 
-                scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
-                coord_equal()
-            # Ammend gg for countries that do not have data
-            test <- map$access
+            # Ammend for countries that do not have data
+            test <- map2[names(map2) == r]
             if(dim(data.frame(test))[1]==0){
                 map <- worldmap[worldmap$region==c,]
                 gg = ggplot() +
@@ -291,7 +280,7 @@ server <- function(input, output) ({
                         aes(x=long, y=lat, map_id=region),fill = "gray"
                     ) +
                     theme(plot.title = element_text(hjust = 0.5, size = 30))
-            }else if(T %in% is.na(map$access)){
+            }else if(T %in% is.na(test)){
                 gg = ggplot() +
                     ggtitle(paste0("Data is unavailable for \n", c)) +
                     geom_map(
@@ -302,7 +291,18 @@ server <- function(input, output) ({
                 coord_equal()
                 theme(plot.title = element_text(hjust = 0.5, size = 30))
             }else{
-                gg = gg
+                map$access <- max(map2[names(map2) == r])
+                names(map)[ncol(map)] <- "access"
+                gg = ggplot() +
+                  ggtitle(paste0(max(map$access),"%")) +
+                  theme(plot.title = element_text(hjust = 0.5, size = 30)) +
+                  geom_map(
+                    data=map, 
+                    map=map,
+                    aes(x=long, y=lat, map_id=region, fill=access)
+                  ) + 
+                  scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
+                  coord_equal()
             }
             gg
         }
