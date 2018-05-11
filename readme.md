@@ -24,8 +24,59 @@ View/download a gif showing the world map shaded to depict percentage of populat
 
 
 ## Datasets
-Data was scraped from the Global Tracking Framework website: http://gtf.esmap.org/countries.
+Data was scraped from the Global Tracking Framework website: http://gtf.esmap.org/countries. Data are unavailable for:
 
+Antarctica
+
+Ascension Island
+
+Azores
+
+Bes Islands
+
+Bonaire
+
+Canary Islands
+
+Chagos Archipelago
+
+Christmas Island
+
+Cocos Islands
+
+French Southern and Antarctic Lands
+
+Gibraltar
+
+Guernsey
+
+Heard Island
+
+Hong Kong Sar China
+
+Jersey
+
+Macao Sar China
+
+Madeira Islands
+
+Norfolk Island
+
+Pitcairn Islands
+
+Saba
+
+Siachen Glacier
+
+Sint Eustatius
+
+South Georgia
+
+South Sandwich Islands
+
+Tuvalu
+
+Vatican
 
 <!-- ### Tools
 The following tools were used:

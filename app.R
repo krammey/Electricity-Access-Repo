@@ -17,8 +17,13 @@ worldmap$region[worldmap$region == 'Virgin Islands'] <- "United States Virgin Is
 
 
 # Get list of countries
-countrylist <- data.frame(unique(worldmap$region))
-countrylist <- countrylist[order(countrylist$unique.worldmap.region),]
+countrylist <- cbind.data.frame(worldmap$region,worldmap$subregion,stringsAsFactors = F)
+names(countrylist) <- c("region","subregion")
+countrylist$region[countrylist$subregion == 'Hawaii'] <- "USA - Hawaii"
+countrylist$region[countrylist$subregion == 'Alaska'] <- "USA - Alaska"
+countrylist$region[countrylist$region == 'USA'] <- "USA - Continental"
+countrylist <- data.frame(unique(countrylist$region))
+countrylist <- countrylist[order(countrylist$unique.countrylist.region.),]
 
 # Load access data
 access_data <- read.csv('access_data.csv', header=TRUE, stringsAsFactors = F, na.strings="NA")
@@ -66,29 +71,6 @@ CountryMapDataFxn = function(c,h){
     return(df2)
   
 }
-
-### COMMENT OUT
-##  Generate images to make GIFs
-# for(h in 1990:2014){
-#     worldmap2 <- YearMapDataFxn(h,50)
-#     # Plot
-#     gg <- ggplot() +
-        # ggtitle(as.character(h)) +
-        # theme(plot.title = element_text(hjust = 0.5, size = 30)) +
-#         # theme(plot.margin=unit(c(0,0,0,0),"mm")) +
-#         geom_map(
-#             data=worldmap2,
-#             map=worldmap2,
-#             aes(x=long, y=lat, map_id=region, fill=access)
-#         ) +
-#         scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) +
-#         coord_equal() +
-#         ditch_the_axes +
-#         annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
-#     gg
-#     column <- paste0(h,"_Access")
-#     ggsave(paste0(column,"-max50.jpg"), dpi = 72)
-# }
 
 
 # This function computes a new data set. It can optionally take a function,
@@ -252,14 +234,29 @@ server <- function(input, output) ({
         r <- input$inputregion
         
         # Get mapping data
+        if(c %in% c("USA - Hawaii","USA - Alaska","USA - Continental")){
+          c="USA"
+        }
         map2 <- CountryMapDataFxn(c,h)
         map <- map2[,1:6]
-        map$access <- map2[names(map2) == r]
+        if(input$inputcountry == "USA - Continental"){
+          map <- map[!(map$subregion %in% c("Hawaii","Alaska")),]
+          c="USA - Continental"
+        }
+        if(input$inputcountry == "USA - Hawaii"){
+          map <- map[map$subregion == "Hawaii",]
+          c="USA - Hawaii"
+        }
+        if(input$inputcountry == "USA - Alaska"){
+          map <- map[map$subregion == "Alaska",]
+          c="USA - Alaska"
+        }
+        map$access <- max(map2[names(map2) == r])
         names(map)[ncol(map)] <- "access"
         
         # Plot
         gg = ggplot() +
-            ggtitle(paste0(as.character(map$access[1,1]),"%")) +
+            ggtitle(paste0(max(map$access),"%")) +
             theme(plot.title = element_text(hjust = 0.5, size = 30)) +
             geom_map(
                 data=map, 
@@ -269,7 +266,8 @@ server <- function(input, output) ({
             scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
             coord_equal()
         # Ammend gg for countries that do not have data
-        if(dim(map$access)[1]==0){
+        test <- map$access
+        if(dim(data.frame(test))[1]==0){
             map <- worldmap[worldmap$region==c,]
             gg = ggplot() +
                 ggtitle(paste0("Data is unavailable for \n",as.character(c))) +
@@ -279,7 +277,7 @@ server <- function(input, output) ({
                     aes(x=long, y=lat, map_id=region),fill = "gray"
                 ) +
                 theme(plot.title = element_text(hjust = 0.5, size = 30))
-        }else if(is.na(map$access[1,1]) == T){
+        }else if(T %in% is.na(map$access)){
             gg = ggplot() +
                 ggtitle(paste0("Data is unavailable for \n", c)) +
                 geom_map(
