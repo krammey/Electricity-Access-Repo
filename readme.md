@@ -1,13 +1,13 @@
 
-This application was built as a final class project at the University 
-of Texas at Austin.
+This application was built as a final class project at the University of Texas at Austin.
 
-Katrina Ramirez-Meyers
+By: Katrina Ramirez-Meyers
 
 May 11, 2018
 
-
 ## Tabs
+
+The following tabs use different methods to visualize percentages of world populations with access to electricity.
 
 #### Global Access by Year 
 Select a year for a map of electricity access to be generated.
@@ -24,59 +24,34 @@ View/download a gif showing the world map shaded to depict percentage of populat
 
 
 ## Datasets
-Data was scraped from the Global Tracking Framework website: http://gtf.esmap.org/countries. Data are unavailable for:
+Data was scraped from the Global Tracking Framework website: http://gtf.esmap.org/countries. Data are unavailable for the following regions:
 
-Antarctica
-
-Ascension Island
-
-Azores
-
-Bes Islands
-
-Bonaire
-
-Canary Islands
-
-Chagos Archipelago
-
-Christmas Island
-
-Cocos Islands
-
-French Southern and Antarctic Lands
-
-Gibraltar
-
-Guernsey
-
-Heard Island
-
-Hong Kong Sar China
-
-Jersey
-
-Macao Sar China
-
-Madeira Islands
-
-Norfolk Island
-
-Pitcairn Islands
-
-Saba
-
-Siachen Glacier
-
-Sint Eustatius
-
-South Georgia
-
-South Sandwich Islands
-
-Tuvalu
-
-Vatican
+- Antarctica
+- Ascension Island
+- Azores
+- Bes Islands
+- Bonaire
+- Canary Islands
+- Chagos Archipelago
+- Christmas Island
+- Cocos Islands
+- French Southern and Antarctic Lands
+- Gibraltar
+- Guernsey
+- Heard Island
+- Hong Kong Sar China
+- Jersey
+- Macao Sar China
+- Madeira Islands
+- Norfolk Island
+- Pitcairn Islands
+- Saba
+- Siachen Glacier
+- Sint Eustatius
+- South Georgia
+- South Sandwich Islands
+- Tuvalu
+- Vatican
 
 <!-- ### Tools
 The following tools were used:
@@ -89,5 +64,6 @@ The following tools were used:
 ### Deliverables
 The end result is this publicly accessible tool for observing electrification trends.-->
 
+## Future Work
 The project is meant to serve as a starting point for further data analysis and visualization. 
 

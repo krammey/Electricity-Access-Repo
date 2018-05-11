@@ -23,7 +23,8 @@ countrylist$region[countrylist$subregion == 'Hawaii'] <- "USA - Hawaii"
 countrylist$region[countrylist$subregion == 'Alaska'] <- "USA - Alaska"
 countrylist$region[countrylist$region == 'USA'] <- "USA - Continental"
 countrylist <- data.frame(unique(countrylist$region))
-countrylist <- countrylist[order(countrylist$unique.countrylist.region.),]
+countrylist <- data.frame(countrylist[order(countrylist$unique.countrylist.region.),])
+names(countrylist) <- "Country/Region"
 
 # Load access data
 access_data <- read.csv('access_data.csv', header=TRUE, stringsAsFactors = F, na.strings="NA")
@@ -106,9 +107,9 @@ ui <- dashboardPage(
       width = 300,
       hr(),
       sidebarMenu(id="tabs",
-                  menuItem("ReadMe", tabName = "readme", icon=icon("info")),
-                  menuItem("Global Access By Year", tabName="by_year", icon=icon("globe"), selected=TRUE),
-                  menuItem("Rural Versus Urban Access By Country", tabName="by_country", icon=icon("adjust"), selected=TRUE),
+                  menuItem("ReadMe", tabName = "readme", icon=icon("info"), selected=TRUE),
+                  menuItem("Global Access By Year", tabName="by_year", icon=icon("globe")),
+                  menuItem("Rural Versus Urban Access By Country", tabName="by_country", icon=icon("adjust")),
                   menuItem("Gifs",  tabName = "gifs", icon = icon("play"),
                       menuSubItem("All Countries", tabName = "gif100", icon = icon("angle-right")),
                       menuSubItem("High Impact Countries", tabName = "gif50", icon = icon("angle-right"))
@@ -119,7 +120,7 @@ ui <- dashboardPage(
     
     dashboardBody(
         tabItems(
-            tabItem(tabName = "readme",
+            tabItem(tabName = "readme", selected = T,
                 box( width = NULL, title = "Welcome!",solidHeader = TRUE,status = "primary", 
                 withMathJax(),
                 includeMarkdown("Readme.md")
@@ -148,7 +149,7 @@ ui <- dashboardPage(
                         box( width = NULL, title = "Select a country:",solidHeader = TRUE,status = "primary",
                             selectizeInput(inputId="inputcountry", h4(""),
                                 options = list(dropdownParent = 'body'),
-                                choices = countrylist
+                                choices = c(Choose='',countrylist)
                             ),
                             tags$head(tags$style(".selectize-control.single { width: 150px; z-index: 1; }"))
                         ),
@@ -222,6 +223,15 @@ server <- function(input, output) ({
       
         c <- input$inputcountry
         r <- input$inputregion
+        if(input$inputcountry == "USA - Continental"){
+          c="Continental USA"
+        }
+        if(input$inputcountry == "USA - Hawaii"){
+          c="Hawaii"
+        }
+        if(input$inputcountry == "USA - Alaska"){
+          c="Alaska"
+        }
         if(r == "National"){r <- ""}
         paste0("Electricity Access in ",r," ",c," in ",input$inputyear_c)
     })
@@ -233,65 +243,69 @@ server <- function(input, output) ({
         c <- input$inputcountry
         r <- input$inputregion
         
-        # Get mapping data
-        if(c %in% c("USA - Hawaii","USA - Alaska","USA - Continental")){
-          c="USA"
+        if(c == ''){
+            ggplot()
         }
-        map2 <- CountryMapDataFxn(c,h)
-        map <- map2[,1:6]
-        if(input$inputcountry == "USA - Continental"){
-          map <- map[!(map$subregion %in% c("Hawaii","Alaska")),]
-          c="USA - Continental"
-        }
-        if(input$inputcountry == "USA - Hawaii"){
-          map <- map[map$subregion == "Hawaii",]
-          c="USA - Hawaii"
-        }
-        if(input$inputcountry == "USA - Alaska"){
-          map <- map[map$subregion == "Alaska",]
-          c="USA - Alaska"
-        }
-        map$access <- max(map2[names(map2) == r])
-        names(map)[ncol(map)] <- "access"
-        
-        # Plot
-        gg = ggplot() +
-            ggtitle(paste0(max(map$access),"%")) +
-            theme(plot.title = element_text(hjust = 0.5, size = 30)) +
-            geom_map(
-                data=map, 
-                map=map,
-                aes(x=long, y=lat, map_id=region, fill=access)
-            ) + 
-            scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
-            coord_equal()
-        # Ammend gg for countries that do not have data
-        test <- map$access
-        if(dim(data.frame(test))[1]==0){
-            map <- worldmap[worldmap$region==c,]
+        else{
+            # Get mapping data
+            if(c %in% c("USA - Hawaii","USA - Alaska","USA - Continental")){
+              c="USA"
+            }
+            map2 <- CountryMapDataFxn(c,h)
+            map <- map2[,1:6]
+            if(input$inputcountry == "USA - Continental"){
+              map <- map[!(map$subregion %in% c("Hawaii","Alaska")),]
+              c="Continental USA"
+            }
+            if(input$inputcountry == "USA - Hawaii"){
+              map <- map[map$subregion == "Hawaii",]
+              c="Hawaii"
+            }
+            if(input$inputcountry == "USA - Alaska"){
+              map <- map[map$subregion == "Alaska",]
+              c="Alaska"
+            }
+            map$access <- max(map2[names(map2) == r])
+            names(map)[ncol(map)] <- "access"
+            
+            # Plot
             gg = ggplot() +
-                ggtitle(paste0("Data is unavailable for \n",as.character(c))) +
+                ggtitle(paste0(max(map$access),"%")) +
+                theme(plot.title = element_text(hjust = 0.5, size = 30)) +
                 geom_map(
                     data=map, 
                     map=map,
-                    aes(x=long, y=lat, map_id=region),fill = "gray"
+                    aes(x=long, y=lat, map_id=region, fill=access)
+                ) + 
+                scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
+                coord_equal()
+            # Ammend gg for countries that do not have data
+            test <- map$access
+            if(dim(data.frame(test))[1]==0){
+                map <- worldmap[worldmap$region==c,]
+                gg = ggplot() +
+                    ggtitle(paste0("Data is unavailable for \n",as.character(c))) +
+                    geom_map(
+                        data=map, 
+                        map=map,
+                        aes(x=long, y=lat, map_id=region),fill = "gray"
+                    ) +
+                    theme(plot.title = element_text(hjust = 0.5, size = 30))
+            }else if(T %in% is.na(map$access)){
+                gg = ggplot() +
+                    ggtitle(paste0("Data is unavailable for \n", c)) +
+                    geom_map(
+                        data=map, 
+                        map=map,
+                        aes(x=long, y=lat, map_id=region),fill = "#ffffff"
                 ) +
+                coord_equal()
                 theme(plot.title = element_text(hjust = 0.5, size = 30))
-        }else if(T %in% is.na(map$access)){
-            gg = ggplot() +
-                ggtitle(paste0("Data is unavailable for \n", c)) +
-                geom_map(
-                    data=map, 
-                    map=map,
-                    aes(x=long, y=lat, map_id=region),fill = "#ffffff"
-            ) +
-            coord_equal()
-            theme(plot.title = element_text(hjust = 0.5, size = 30))
-        }else{
-            gg = gg
+            }else{
+                gg = gg
+            }
+            gg
         }
-        gg
-      
     })
     
     output$gif100 <- renderImage({
