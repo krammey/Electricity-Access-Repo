@@ -5,10 +5,11 @@
 library(shiny)
 library(shinydashboard)
 library(ggplot2)
-library(ggmap)
 library(maps)
+library(ggmap)
 library(magick)
 library(markdown)
+library(Cairo)
 
 # Load world map and fix virgin islands labels
 worldmap <- map_data(map="world")
@@ -192,6 +193,7 @@ ui <- dashboardPage(
 
 server <- function(input, output) ({
     
+    options(shiny.usecairo=T)
     
     output$MapTitle <- renderText(paste0("Map of Electricity Access in ",input$inputyear))
     
