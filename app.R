@@ -91,6 +91,30 @@ CountryMapDataFxn = function(c,h){
 # }
 
 
+# This function computes a new data set. It can optionally take a function,
+# updateProgress, which will be called as each row of data is added.
+compute_data <- function(updateProgress = NULL) {
+  # Create 0-row data frame which will be used to store data
+  dat <- data.frame(x = numeric(0), y = numeric(0))
+  
+  for (i in 1:10) {
+    Sys.sleep(0.25)
+    
+    # Compute new row of data
+    new_row <- data.frame(x = rnorm(1), y = rnorm(1))
+    
+    # If we were passed a progress update function, call it
+    if (is.function(updateProgress)) {
+      text <- paste0("x:", round(new_row$x, 2), " y:", round(new_row$y, 2))
+      updateProgress(detail = text)
+    }
+    
+    # Add the new row of data
+    dat <- rbind(dat, new_row)
+  }
+  
+  dat
+}
 
 ui <- dashboardPage(
   
@@ -123,7 +147,7 @@ ui <- dashboardPage(
                 fluidRow( # split panel into 2 columns: 1 for year slider input, 1 for map output
                     column(width = 2,
                         box( width = NULL, title = "Select a year:",solidHeader = TRUE,status = "primary", 
-                            sliderInput(inputId="inputyear",label="", value=1990, min=1990, max = 2014, step=1, sep ="")
+                            sliderInput(inputId="inputyear",label="", value=1990, min=1990, max = 2014, step=1, sep ="",ticks = F)
                         )
                     ),
                     column(width = 10,
@@ -151,7 +175,7 @@ ui <- dashboardPage(
                                           c("National"="National","Urban"="Urban","Rural"="Rural"))
                         ),
                         box( width = NULL, title = "Select a year:",solidHeader = TRUE,status = "primary", 
-                             sliderInput(inputId="inputyear_c",label="", value=2014, min=1990, max = 2014, step=1, sep ="")
+                             sliderInput(inputId="inputyear_c",label="", value=2014, min=1990, max = 2014, step=1, sep ="",ticks = F)
                         )
                     ),
                     column(width = 8,
@@ -190,7 +214,7 @@ server <- function(input, output) ({
     
     
     output$YearMap <- renderPlot({
-        
+
         # Get input year
         h <- input$inputyear
         
@@ -203,7 +227,7 @@ server <- function(input, output) ({
                 data=worldmap2, 
                 map=worldmap2,
                 aes(x=long, y=lat, map_id=region, fill=access)
-            ) + 
+            ) +
             scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
             coord_equal() +
             ditch_the_axes +
@@ -217,7 +241,7 @@ server <- function(input, output) ({
         c <- input$inputcountry
         r <- input$inputregion
         if(r == "National"){r <- ""}
-        paste0("Map of Electricity Access in ",r," ",c," in ",input$inputyear_c)
+        paste0("Electricity Access in ",r," ",c," in ",input$inputyear_c)
     })
     
     output$CountryMap <- renderPlot({
@@ -273,6 +297,20 @@ server <- function(input, output) ({
     })
     
     output$gif100 <- renderImage({
+
+        # Create a Progress object
+        progress <- shiny::Progress$new(style = "old")
+        progress$set(message = "Computing data", value = 0)
+        # Close the progress when this reactive exits (even if there's an error)
+        on.exit(progress$close())
+        # Create a closure to update progress.
+        updateProgress <- function(value = NULL, detail = NULL) {
+          if (is.null(value)) {
+            value <- progress$getValue()
+            value <- value + (progress$getMax() - value) / 5
+          }
+          progress$set(value = value, detail = detail)
+        }
       
         tmpfile <- image_read("gif100.gif") %>% 
             image_resize("90%") %>%
@@ -284,6 +322,20 @@ server <- function(input, output) ({
     })
     
     output$gif50 <- renderImage({
+      
+      # Create a Progress object
+      progress <- shiny::Progress$new(style = "old")
+      progress$set(message = "Computing data", value = 0)
+      # Close the progress when this reactive exits (even if there's an error)
+      on.exit(progress$close())
+      # Create a closure to update progress.
+      updateProgress <- function(value = NULL, detail = NULL) {
+        if (is.null(value)) {
+          value <- progress$getValue()
+          value <- value + (progress$getMax() - value) / 5
+        }
+        progress$set(value = value, detail = detail)
+      }
       
       tmpfile <- image_read("gif50.gif") %>% 
         image_resize("90%") %>%
