@@ -7,21 +7,27 @@ Katrina Ramirez-Meyers
 May 11, 2018
 
 
-### Project Topic
-The project aimed to visualize global electrification trends from 1990 to 2014. An interactive website was created that allows site visitors to:
+## Tabs
 
-1.	View and/or download a gif showing the world map shaded to depict percentage of population with electricity access, by country, over time.
-2.	Select a year for a map of electricity access to be generated.
-3.	Select a country to generate the following information:
-	* Average electricity growth rate
-	* Rural vs. urban electricity access
+#### Global Access by Year 
+Select a year for a map of electricity access to be generated.
+
+#### Rural Versus Urban Access By Country
+Select a country and year to generate percentages of rural, urban, and national populations with access to electricity.
+
+#### Gifs
+View/download a gif showing the world map shaded to depict percentage of population with electricity access, by country, from 1990 to 2014. Choose between 2 options:
+
+1.	All Countries
+2.	High Impact Countries - Countries in which less than 50% of the population have access to electricity.
 
 
-### Datasets
+
+## Datasets
 Data was scraped from the Global Tracking Framework website: http://gtf.esmap.org/countries.
 
 
-### Tools
+<!-- ### Tools
 The following tools were used:
 * RStudio was used to clean and process the data and compute electrification rate averages.
 * Shiny was used to create the website/user interface.
@@ -30,4 +36,7 @@ The following tools were used:
 
 
 ### Deliverables
-The end result is this publicly accessible tool for observing electrification trends. The project is meant to serve as a starting point for further data analysis and visualization.
+The end result is this publicly accessible tool for observing electrification trends.-->
+
+The project is meant to serve as a starting point for further data analysis and visualization. 
+
