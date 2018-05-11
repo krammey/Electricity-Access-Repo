@@ -16,20 +16,21 @@ worldmap$region[worldmap$region == 'Virgin Islands'] <- "United States Virgin Is
 
 
 # Get list of countries
-countrylist <- unique(worldmap$region)
+countrylist <- data.frame(unique(worldmap$region))
+countrylist <- countrylist[order(countrylist$unique.worldmap.region),]
 
 # Load access data
 access_data <- read.csv('access_data.csv', header=TRUE, stringsAsFactors = F, na.strings="NA")
 
 # Get rid of axes for plot
 ditch_the_axes <- theme(
-  axis.text = element_blank(),
-  axis.line = element_blank(),
-  axis.ticks = element_blank(),
-  panel.border = element_blank(),
-  panel.grid = element_blank(),
-  axis.title = element_blank(),
-  panel.background = element_blank()
+    axis.text = element_blank(),
+    axis.line = element_blank(),
+    axis.ticks = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    axis.title = element_blank(),
+    panel.background = element_blank()
 )
 
 # Define data processing function with year, h, as input
@@ -53,21 +54,16 @@ YearMapDataFxn = function(h,MaxPerc=100){
 # Define data processing function with year, h, as input
 CountryMapDataFxn = function(c,h){
   
-  # Get access data for year h, country c
-  access_df <- access_data[access_data$country == c,]
-  access_df <- access_df[access_df$Year == h,]
-  # access_df <- cbind.data.frame(access_df$country, as.numeric(access_df$Nat.Elec.Rate), stringsAsFactors=FALSE)
-  # names(access_df) <- c("Country","Nat.Elec.Rate")
-  # Replace electrification rates over 80% with NA
-  # access_df$Nat.Elec.Rate[access_df$Nat.Elec.Rate > MaxPerc] <- NA
-  # Merge access data with map.world by country
-  countrymap <- worldmap[worldmap$region == c,]
-  df <- merge(countrymap, access_df, by.x = "region", by.y = "country")
-  df2 <- df[order(df$Year),]
-  # Append column to map data and rename
-  # worldmap2 <- cbind.data.frame(worldmap, as.numeric(df2$Nat.Elec.Rate), stringsAsFactors=FALSE)
-  names(df2)[8:10] <- c("National","Rural","Urban")
-  return(df2)
+    # Get access data for year h, country c
+    access_df <- access_data[access_data$country == c,]
+    access_df <- access_df[access_df$Year == h,]
+    # Merge access data with worldmap by country
+    countrymap <- worldmap[worldmap$region == c,]
+    df <- merge(countrymap, access_df, by.x = "region", by.y = "country")
+    df2 <- df[order(df$Year),]
+    names(df2)[8:10] <- c("National","Rural","Urban")
+    return(df2)
+  
 }
 
 ### COMMENT OUT
@@ -76,8 +72,8 @@ CountryMapDataFxn = function(c,h){
 #     worldmap2 <- YearMapDataFxn(h,50)
 #     # Plot
 #     gg <- ggplot() +
-#         ggtitle(as.character(h)) +
-#         theme(plot.title = element_text(hjust = 0.5, size = 30)) +
+        # ggtitle(as.character(h)) +
+        # theme(plot.title = element_text(hjust = 0.5, size = 30)) +
 #         # theme(plot.margin=unit(c(0,0,0,0),"mm")) +
 #         geom_map(
 #             data=worldmap2,
@@ -97,11 +93,10 @@ CountryMapDataFxn = function(c,h){
 
 ui <- dashboardPage(
   
-    dashboardHeader(title = "Global Electricity Access", titleWidth = 250),
-    
+    dashboardHeader(title = "Global Electricity Access", titleWidth = 300),
     
     dashboardSidebar(
-      width = 250,
+      width = 300,
       hr(),
       sidebarMenu(id="tabs",
                   menuItem("ReadMe", tabName = "readme", icon=icon("info")),
@@ -115,7 +110,6 @@ ui <- dashboardPage(
       hr()
     ),
     
-    
     dashboardBody(
         tabItems(
             tabItem(tabName = "by_year",
@@ -127,7 +121,8 @@ ui <- dashboardPage(
                     ),
                     column(width = 10,
                          box(
-                           height = NULL, width = NULL, solidHeader = TRUE,
+                           height = NULL, 
+                           width = NULL, solidHeader = TRUE,
                            title = textOutput("MapTitle"), status = "primary", 
                            plotOutput("YearMap")
                          )
@@ -141,12 +136,15 @@ ui <- dashboardPage(
                             selectizeInput(inputId="inputcountry", h4(""),
                                 options = list(dropdownParent = 'body'),
                                 choices = countrylist
-                            ),
-                            tags$head(tags$style(".selectize-control.single { width: 150px; z-index: 1; }"))
+                            )
+                            # tags$head(tags$style(".selectize-control.single { width: 150px; z-index: 1; }"))
                         ),
                         box( width = NULL, title = "Choose a region:",solidHeader = TRUE,status = "primary",
-                             radioButtons(inputId="regioninput", "", 
+                             radioButtons(inputId="inputregion", "", 
                                           c("National"="National","Urban"="Urban","Rural"="Rural"))
+                        ),
+                        box( width = NULL, title = "Select a year:",solidHeader = TRUE,status = "primary", 
+                             sliderInput(inputId="inputyear_c",label="", value=2014, min=1990, max = 2014, step=1, sep ="")
                         )
                     ),
                     column(width = 8,
@@ -175,9 +173,6 @@ ui <- dashboardPage(
         )
     )
 )
-
-
-############################
 
 
 
@@ -210,36 +205,70 @@ server <- function(input, output) ({
         
     })
     
-    output$CountryMapTitle <- renderText(paste0("Map of Electricity Access in ",input$inputcountry))
+    output$CountryMapTitle <- renderText({
+      
+        c <- input$inputcountry
+        r <- input$inputregion
+        if(r == "National"){r <- ""}
+        paste0("Map of Electricity Access in ",r," ",c," in ",input$inputyear_c)
+    })
+    
     output$CountryMap <- renderPlot({
       
-      # Get input year and country
-      h <- input$inputyear
-      c <- input$inputcountry
-      
-      # Get mapping data
-      map <- CountryMapDataFxn(c,h)
-      map$access <- map[names(map) == input$inputregion]
-      names(map)[ncol(map)] <- "access"
-      
-      # Plot
-      gg = ggplot() +
-        geom_map(
-          data=map, 
-          map=map,
-          aes(x=long, y=lat, map_id=region, fill=access)
-        ) + 
-        scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
-        coord_equal() +
-        ditch_the_axes
-#        annotate("text",x=160, y=66.5,label = "\U00A9 K. Ramirez-Meyers",col="white", cex=2,alpha = 0.8)
-      gg
+        # Get input year and country
+        h <- input$inputyear_c
+        c <- input$inputcountry
+        r <- input$inputregion
+        
+        # Get mapping data
+        map2 <- CountryMapDataFxn(c,h)
+        map <- map2[,1:6]
+        map$access <- map2[names(map2) == r]
+        names(map)[ncol(map)] <- "access"
+        
+        # Plot
+        gg = ggplot() +
+            ggtitle(paste0(as.character(map$access[1,1]),"%")) +
+            theme(plot.title = element_text(hjust = 0.5, size = 30)) +
+            geom_map(
+                data=map, 
+                map=map,
+                aes(x=long, y=lat, map_id=region, fill=access)
+            ) + 
+            scale_fill_gradient(low = "orange", high = "blue", guide = "colourbar", limits=c(0,100)) + 
+            coord_equal()
+        # Ammend gg for countries that do not have data
+        if(dim(map$access)[1]==0){
+            map <- worldmap[worldmap$region==c,]
+            gg = ggplot() +
+                ggtitle(paste0("Data is unavailable for \n",as.character(c))) +
+                geom_map(
+                    data=map, 
+                    map=map,
+                    aes(x=long, y=lat, map_id=region),fill = "gray"
+                ) +
+                theme(plot.title = element_text(hjust = 0.5, size = 30))
+        }else if(is.na(map$access[1,1]) == T){
+            gg = ggplot() +
+                ggtitle(paste0("Data is unavailable for \n", c)) +
+                geom_map(
+                    data=map, 
+                    map=map,
+                    aes(x=long, y=lat, map_id=region),fill = "#ffffff"
+            ) +
+            coord_equal()
+            theme(plot.title = element_text(hjust = 0.5, size = 30))
+        }else{
+            gg = gg
+        }
+        gg
       
     })
     
     output$gif100 <- renderImage({
       
         tmpfile <- image_read("gif100.gif") %>% 
+            image_resize("90%") %>%
             image_animate(fps=4) %>%
             image_write(tempfile(fileext='gif'), format = 'gif')
         
@@ -250,6 +279,7 @@ server <- function(input, output) ({
     output$gif50 <- renderImage({
       
       tmpfile <- image_read("gif50.gif") %>% 
+        image_resize("90%") %>%
         image_animate(fps=4) %>%
         image_write(tempfile(fileext='gif'), format = 'gif')
       
